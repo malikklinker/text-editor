@@ -20,8 +20,6 @@ void print_help(void) {
   printf("- save: write the file to disk\n");
   printf("- quit: exit the program\n");
 }
-
-// Prompt the user for a line number; keep asking until we get a useful answer.
 int prompt_for_line_number(char *msg, int length) {
   bool good_number = false;
   int linenum;
@@ -48,9 +46,7 @@ int main(int argc, char *argv[]) {
   }
   const char *filename = argv[1];
 
-  printf("**************************************\n");
-  printf("* text editor with undo and redo *\n");
-  printf("**************************************\n");
+  printf("Text editor — enter help for commands.\n");
   printf("editing %s\n", filename);
 
   const int BUFSIZE = 1024;
@@ -96,7 +92,6 @@ int main(int argc, char *argv[]) {
       chomp(buf);
       clear_stack(redo);
       redo = NULL;
-      // make a new stack entry so we can undo
       stack = push_duplicate(stack);
       stack->lines = append_text(stack->lines, buf);
     } else if (!strcmp(buf, "insert")) {
@@ -117,7 +112,6 @@ int main(int argc, char *argv[]) {
       chomp(buf);
       clear_stack(redo);
       redo = NULL;
-      // make a new stack entry so we can undo
       stack = push_duplicate(stack);
       stack->lines = insert_text(stack->lines, buf, linenum);
     } else if (!strcmp(buf, "replace")) {
@@ -137,7 +131,6 @@ int main(int argc, char *argv[]) {
       chomp(buf);
       clear_stack(redo);
       redo = NULL;
-      // make a new stack entry so we can undo
       stack = push_duplicate(stack);
       stack->lines = replace_text(stack->lines, buf, linenum);
     } else if (!strcmp(buf, "delete")) {
@@ -152,13 +145,11 @@ int main(int argc, char *argv[]) {
         break;
       clear_stack(redo);
       redo = NULL;
-      // make a new stack entry so we can undo
       stack = push_duplicate(stack);
       stack->lines = delete_text(stack->lines, linenum);
     } else if (!strcmp(buf, "clear")) {
       clear_stack(redo);
       redo = NULL;
-      // push an empty ll_text onto the stack
       stack = push_empty(stack);
     } else if (!strcmp(buf, "undo")) {
       if (stack->next) {
@@ -178,7 +169,6 @@ int main(int argc, char *argv[]) {
       printf("unknown command: %s\n", buf);
     }
   }
-  // done with the loop. Clean up by undoing until the stack is empty.
   while (stack) {
     stack = pop_stack(stack);
   }

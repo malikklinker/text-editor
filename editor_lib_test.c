@@ -6,58 +6,51 @@
 
 static int failures;
 
-void str_should_be_exactly_equal(const char *message, char *expected,
-                                 char *actual) {
-  failures += strcmp(expected, actual) != 0;
-  printf("%s\n", message);
-  printf("%s: wanted \"%s\", got \"%s\"\n",
-         !strcmp(expected, actual) ? "SUCCESS" : "FAILURE", expected, actual);
+static void expect_string(const char *message, const char *expected,
+                          const char *actual) {
+  if (!actual || strcmp(expected, actual)) {
+    fprintf(stderr, "%s: expected \"%s\", got \"%s\"\n", message, expected,
+            actual ? actual : "(null)");
+    ++failures;
+  }
 }
 
-void should_be_exactly_equal(const char *message, int expected, int actual) {
-  failures += expected != actual;
-  printf("%s\n", message);
-  printf("%s: wanted %d, got %d\n",
-         (expected == actual) ? "SUCCESS" : "FAILURE", expected, actual);
+static void expect_int(const char *message, int expected, int actual) {
+  if (expected != actual) {
+    fprintf(stderr, "%s: expected %d, got %d\n", message, expected, actual);
+    ++failures;
+  }
 }
 
 int main(void) {
-  printf("**********************\n");
-  printf("tests for append_text\n");
-  printf("**********************\n");
   ll_text *list = NULL;
   list = append_text(list, "hello");
 
-  str_should_be_exactly_equal("empty list and then append hello", "hello",
-                              list->text);
+  expect_string("empty list and then append hello", "hello", list->text);
   free(list->text);
   free(list);
 
   list = NULL;
   list = append_text(list, "hello");
   list = append_text(list, "second string");
-  str_should_be_exactly_equal("empty list and then append two strings",
-                              "second string", list->next->text);
+  expect_string("empty list and then append two strings", "second string",
+                list->next->text);
   free(list->next->text);
   free(list->next);
   free(list->text);
   free(list);
 
-  printf("\n**********************\n");
-  printf("tests for insert_text\n");
-  printf("**********************\n");
-
   list = NULL;
   list = append_text(list, "hello");
   list = insert_text(list, "new first string", 0);
-  str_should_be_exactly_equal("empty list and then append and then insert",
-                              "new first string", list->text);
+  expect_string("empty list and then append and then insert",
+                "new first string", list->text);
 
   list = insert_text(list, "one", 1);
-  str_should_be_exactly_equal("empty list and then append and then insert",
-                              "one", list->next->text);
-  str_should_be_exactly_equal("empty list and then append and then insert",
-                              "hello", list->next->next->text);
+  expect_string("empty list and then append and then insert", "one",
+                list->next->text);
+  expect_string("empty list and then append and then insert", "hello",
+                list->next->next->text);
 
   free(list->next->next->text);
   free(list->next->next);
@@ -65,10 +58,6 @@ int main(void) {
   free(list->next);
   free(list->text);
   free(list);
-
-  printf("\n**********************\n");
-  printf("tests for delete_text\n");
-  printf("**********************\n");
 
   list = NULL;
   list = append_text(list, "hello");
@@ -77,20 +66,15 @@ int main(void) {
 
   list = delete_text(list, 1);
 
-  str_should_be_exactly_equal("append and then insert and then delete",
-                              "new first string", list->text);
-  str_should_be_exactly_equal("append and then insert and then delete", "hello",
-                              list->next->text);
+  expect_string("append and then insert and then delete", "new first string",
+                list->text);
+  expect_string("append and then insert and then delete", "hello",
+                list->next->text);
 
   list = delete_text(list, 0);
-  str_should_be_exactly_equal("append and then insert and then delete", "hello",
-                              list->text);
+  expect_string("append and then insert and then delete", "hello", list->text);
   free(list->text);
   free(list);
-
-  printf("\n**********************\n");
-  printf("tests for replace_text\n");
-  printf("**********************\n");
 
   list = NULL;
   list = append_text(list, "hello");
@@ -98,12 +82,11 @@ int main(void) {
   list = insert_text(list, "one", 1);
 
   list = replace_text(list, "two", 1);
-  str_should_be_exactly_equal("append, two inserts, then replace", "two",
-                              list->next->text);
+  expect_string("append, two inserts, then replace", "two", list->next->text);
 
   list = replace_text(list, "good evening", 0);
-  str_should_be_exactly_equal("append, two inserts, then replace",
-                              "good evening", list->text);
+  expect_string("append, two inserts, then replace", "good evening",
+                list->text);
   free(list->next->next->text);
   free(list->next->next);
   free(list->next->text);
@@ -111,25 +94,18 @@ int main(void) {
   free(list->text);
   free(list);
 
-  printf("\n**********************\n");
-  printf("tests for duplicate_ll_text\n");
-  printf("**********************\n");
-
   list = NULL;
   list = append_text(list, "one");
   list = append_text(list, "two");
   list = append_text(list, "three");
 
   ll_text *newlist = duplicate_ll_text(list);
-  str_should_be_exactly_equal("copied list", "one", newlist->text);
-  str_should_be_exactly_equal("copied list", "three",
-                              newlist->next->next->text);
+  expect_string("copied list", "one", newlist->text);
+  expect_string("copied list", "three", newlist->next->next->text);
 
-  printf("%s: pointers for lists should not be equal\n",
-         (list != newlist) ? "SUCCESS" : "FAILURE");
+  expect_int("snapshot owns its nodes", 1, list != newlist);
 
-  printf("%s: pointers for strings in lists should not be equal\n",
-         (list->text != newlist->text) ? "SUCCESS" : "FAILURE");
+  expect_int("snapshot owns its text", 1, list->text != newlist->text);
 
   free(list->next->next->text);
   free(list->next->next);
@@ -145,21 +121,15 @@ int main(void) {
   free(newlist->text);
   free(newlist);
 
-  printf("\n**********************\n");
-  printf("tests for ll_text_length\n");
-  printf("**********************\n");
-
   list = NULL;
 
-  should_be_exactly_equal("length of empty list should be 0", 0,
-                          ll_text_length(list));
+  expect_int("length of empty list should be 0", 0, ll_text_length(list));
 
   list = append_text(list, "one");
   list = append_text(list, "two");
   list = append_text(list, "three");
 
-  should_be_exactly_equal("length of list should now be 3", 3,
-                          ll_text_length(list));
+  expect_int("length of list should now be 3", 3, ll_text_length(list));
 
   free(list->next->next->text);
   free(list->next->next);
@@ -168,10 +138,6 @@ int main(void) {
   free(list->text);
   free(list);
 
-  printf("\n**********************\n");
-  printf("tests for push_duplicate\n");
-  printf("**********************\n");
-
   list = NULL;
   list = append_text(list, "one");
 
@@ -179,10 +145,8 @@ int main(void) {
   stack->lines = list;
 
   stack = push_duplicate(stack);
-  str_should_be_exactly_equal("made a new entry in the stack", "one",
-                              stack->lines->text);
-  str_should_be_exactly_equal("old entry is still there", "one",
-                              stack->next->lines->text);
+  expect_string("made a new entry in the stack", "one", stack->lines->text);
+  expect_string("old entry is still there", "one", stack->next->lines->text);
 
   free(stack->next->lines->text);
   free(stack->next->lines);
@@ -191,30 +155,20 @@ int main(void) {
   free(stack->lines);
   free(stack);
 
-  printf("\n**********************\n");
-  printf("tests for push_empty\n");
-  printf("**********************\n");
-
   list = NULL;
   list = append_text(list, "one");
   stack = calloc(1, sizeof(ll_text_stack));
   stack->lines = list;
 
   stack = push_empty(stack);
-  printf("%s: lines list for top of stack should be empty\n",
-         (stack->lines == NULL) ? "SUCCESS" : "FAILURE");
-  str_should_be_exactly_equal("old entry is still there", "one",
-                              stack->next->lines->text);
+  expect_int("empty snapshot", 1, stack->lines == NULL);
+  expect_string("old entry is still there", "one", stack->next->lines->text);
 
   free(stack->next->lines->text);
   free(stack->next->lines);
   free(stack->next);
   free(stack->lines);
   free(stack);
-
-  printf("\n**********************\n");
-  printf("tests for pop_stack\n");
-  printf("**********************\n");
 
   list = NULL;
   list = append_text(list, "one");
@@ -223,8 +177,8 @@ int main(void) {
 
   stack = push_empty(stack);
   stack = pop_stack(stack);
-  str_should_be_exactly_equal("old entry is restored after popping", "one",
-                              stack->lines->text);
+  expect_string("old entry is restored after popping", "one",
+                stack->lines->text);
 
   free(stack->lines->text);
   free(stack->lines);

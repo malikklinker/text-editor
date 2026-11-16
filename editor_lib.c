@@ -3,9 +3,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-// Functions about ll_text...
-// append a line: add to the end of the linked list
 ll_text *append_text(ll_text *list, char *text) {
   char *new_text = strdup(text);
   ll_text *new_ll = calloc(1, sizeof(ll_text));
@@ -43,9 +40,6 @@ int ll_text_length(ll_text *list) {
   }
   return count;
 }
-
-// insert a specific line: add to specific place in the linked list; this is the
-// new entry at the specified line
 ll_text *insert_text(ll_text *list, char *text, int position) {
   if (position < 0 || position > ll_text_length(list))
     return list;
@@ -64,9 +58,6 @@ ll_text *insert_text(ll_text *list, char *text, int position) {
   cur->next = new_ll;
   return list;
 }
-
-// delete a specific line: delete the ith entry in the linked list and return
-// the new front of the linked list.
 ll_text *delete_text(ll_text *list, int position) {
   if (position < 0 || position >= ll_text_length(list))
     return list;
@@ -94,9 +85,6 @@ ll_text *delete_text(ll_text *list, int position) {
   free(ll_rm);
   return list;
 }
-
-// replace a line: go to the specific entry, free the text that's there, replace
-// it with a copy of the specified text.
 ll_text *replace_text(ll_text *list, char *text, int position) {
   if (position < 0 || position >= ll_text_length(list))
     return list;
@@ -109,9 +97,6 @@ ll_text *replace_text(ll_text *list, char *text, int position) {
   cur->text = replacement;
   return list;
 }
-
-// duplicate a list. Returns a copy of the list, including newly copied versions
-// of all of the strings.
 ll_text *duplicate_ll_text(ll_text *list) {
   if (!list) {
     return NULL;
@@ -131,8 +116,6 @@ ll_text *duplicate_ll_text(ll_text *list) {
 
   return new_head;
 }
-
-// functions about the state stack...
 ll_text_stack *load_from_file(const char *filename) {
   ll_text *lines = NULL;
   ll_text_stack *stack = calloc(1, sizeof(ll_text_stack));
@@ -158,26 +141,18 @@ ll_text_stack *new_stack_empty_text(void) {
   return stack;
 }
 
-// Push a new state onto the stack that's an exact copy of the state currently
-// at the top.
-
 ll_text_stack *push_duplicate(ll_text_stack *stack) {
   ll_text_stack *ll_new = malloc(sizeof(ll_text_stack));
   ll_new->lines = duplicate_ll_text(stack ? stack->lines : NULL);
   ll_new->next = stack;
   return ll_new;
 }
-
-// Push a new entry onto the stack that has an empty ll_text at the top.
 ll_text_stack *push_empty(ll_text_stack *stack) {
   ll_text_stack *ll_new = malloc(sizeof(ll_text_stack));
   ll_new->next = stack;
   ll_new->lines = NULL;
   return ll_new;
 }
-
-// undo, removing the most recent state
-// this has to free all the memory associated with that state
 ll_text_stack *pop_stack(ll_text_stack *stack) {
   if (!stack)
     return NULL;
@@ -192,12 +167,9 @@ ll_text_stack *pop_stack(ll_text_stack *stack) {
   free(stack);
   return next;
 }
-
-// Find the first newline in the input and replace it with \0
 void chomp(char *s) {
   for (int i = 0; s[i]; i++) {
     if (s[i] == '\n' || s[i] == '\r') {
-      // Check for \r in case we're on Windows or a very old Mac??
       s[i] = '\0';
       break;
     }
